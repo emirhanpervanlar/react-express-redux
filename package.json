@@ -1,0 +1,22 @@
+{
+  "name": "react_v3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "run-s install:server install:web",
+    "install:server": "cd server && npm install",
+    "install:web": "cd client && npm install",
+    "start": "run-p start:server start:client",
+    "start:server": "npm start --prefix server",
+    "start:client": "npm start --prefix client"
+  },
+
+  "devDependencies": {
+    "npm-run-all": "^4.0.2"
+  },
+  "keywords": [],
+  "author": "Emirhan Pervanlar",
+  "license": "MIT",
+  "dependencies": {}
+}
