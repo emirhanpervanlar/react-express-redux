@@ -1,39 +1,50 @@
 import express from 'express';
 import config from '../../config'
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import User from '../../models/User';
 
-
-const users = [
-    {
-        Firstname : "Ahmet",
-        Lastname : "Celil",
-        email : "deneme@gmail.com",
-        password : "test123"
-    }
-]
 
 const route = () =>{
-
     const router = new express.Router();
-
+// SIGIN ROUTER
     router.route('/login').post((req,res)=>{
         const { email,password } = req.body;
+        const hashpass = crypto.createHmac('sha256', config.passSecret).update(password).digest('hex');
+        User.findOne({ email: email,password:hashpass}).then((user)=>{
+            if(user){
+                const token = jwt.sign({userId: user._id},config.jwtSecret);
+                User.update({email:email},{
+                    $set : {
+                        lastLogin : new Date()
+                    }
+                }).then(()=>{});
+                res.send({
+                    status : true,
+                    token : token,
+                });
+            }else{
+                res.send({
+                    status : false,
+                });
+            }
+        });
+    });
 
-        const user =  users.find((user) => user.email === email && user.password === password);
+// SIGNUP ROUTER
+    router.route('/sign-up').post((req,res)=>{
+        const {email,password} = req.body;
+        const passwordHashed = crypto.createHmac('sha256', config.passSecret).update(password).digest('hex');
+        const newUser = new User({
+            email : email,
+            password : passwordHashed
+        });
 
-        if(!user){
-            res.send({
-                status : false,
-                message : "Kullanıcı adı veya şifre hatalı !"
-            });
-        }else{
-            res.send({
-                status : true,
-                message : "Giris başarılı !"
-            });
-        }
-
-
-        res.send("ok");
+        newUser.save().then((data)=>{
+            res.send({ status : true, user : data})
+        },(x)=>{
+            res.send({ status : false, error : x})
+        });
     });
 
     return router;
